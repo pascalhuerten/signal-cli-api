@@ -1,0 +1,11 @@
+version: '3.4'
+
+services:
+  signalcliapi:
+    container_name: signalcliapi
+    image: signalcliapi
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "8080:8080" #map docker port 8080 to host port 8080.
