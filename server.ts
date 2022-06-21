@@ -6,6 +6,7 @@ import {
   deleteAccount,
   deleteWebhook,
   getAccount,
+  updateAccountInfo,
   verifyAccount,
 } from "./routers/account.ts";
 import { checkConsent, receive, send } from "./routers/message.ts";
@@ -32,7 +33,8 @@ indexRouter.get("/", (ctx) => {
 accountsRouter
   .get("/accounts/:number", getAccount)
   .post("/accounts/:number", createAccount)
-  .patch("/accounts/:number", verifyAccount)
+  .patch("/accounts/:number", updateAccountInfo)
+  .patch("/accounts/:number/verify", verifyAccount)
   .delete("/accounts/:number", deleteAccount)
   .post("/accounts/:number/webhook", createWebhook)
   .delete("/accounts/:number/webhook", deleteWebhook);

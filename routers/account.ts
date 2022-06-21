@@ -2,6 +2,7 @@ import {
   getUserStatus,
   register,
   unregister,
+  updateProfile,
   verify,
 } from "../src/signal_cli_interface.ts";
 import { Webhook } from "../src/classes/webhook.ts";
@@ -36,8 +37,8 @@ export const getAccount = async ({ response, params }: Context | any) => {
       body: result,
     };
     response.status = 200;
-  } catch (_error) {
-    response.body = null;
+  } catch (error) {
+    response.body = error;
     response.status = 500;
   }
 };
@@ -93,8 +94,8 @@ export const createAccount = async (
       body: `Account information was created for: ${number}`,
     };
     response.status = 201;
-  } catch (_error) {
-    response.body = null;
+  } catch (error) {
+    response.body = error;
     response.status = 500;
   }
 };
@@ -116,6 +117,15 @@ export const verifyAccount = async (
   try {
     const { number } = params;
     const { token } = await body.value;
+
+    if (!token) {
+      response.status = 406;
+      response.body = {
+        success: false,
+        message: "Wrong data provided",
+      };
+      return;
+    }
     // TODO: Validate token.
 
     const error = await verify(number, token);
@@ -130,8 +140,54 @@ export const verifyAccount = async (
     }
 
     response.status = 204;
-  } catch (_error) {
-    response.body = null;
+  } catch (error) {
+    response.body = error;
+    response.status = 500;
+  }
+};
+
+export const updateAccountInfo = async (
+  { request, response, params }: Context | any,
+) => {
+  // Require body
+  const body = await request.body();
+  if (!request.hasBody) {
+    response.status = 400;
+    response.body = {
+      success: false,
+      message: "No data provided",
+    };
+    return;
+  }
+
+  try {
+    const { number } = params;
+    const { name, about } = await body.value;
+
+    if (!name && !about) {
+      response.status = 406;
+      response.body = {
+        success: false,
+        message: "Not enough data provided.",
+      };
+      return;
+    }
+    // TODO: Validate name and about.
+
+    const error = await updateProfile(number, name, about);
+    if (error) {
+      response.body = {
+        success: false,
+        body: `${error}`,
+      };
+
+      response.status = 500;
+      return;
+    }
+
+    response.status = 204;
+  } catch (error) {
+    response.body = error;
     response.status = 500;
   }
 };
@@ -151,8 +207,8 @@ export const deleteAccount = async ({ response, params }: Context | any) => {
     }
 
     response.status = 204;
-  } catch (_error) {
-    response.body = null;
+  } catch (error) {
+    response.body = error;
     response.status = 500;
   }
 };
@@ -191,8 +247,8 @@ export const createWebhook = async (
     new Webhook(webhook, number);
 
     response.status = 204;
-  } catch (_error) {
-    response.body = null;
+  } catch (error) {
+    response.body = error;
     response.status = 500;
   }
 };
@@ -209,8 +265,8 @@ export const deleteWebhook = ({ response, params }: Context | any) => {
     }
 
     response.status = 404;
-  } catch (_error) {
-    response.body = null;
+  } catch (error) {
+    response.body = error;
     response.status = 500;
   }
 };

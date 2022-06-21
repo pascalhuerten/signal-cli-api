@@ -60,6 +60,54 @@ export const verify = async (number: string, token: string) => {
   return null;
 };
 
+export const updateProfile = async (
+  number: string,
+  name: string,
+  about: string,
+) => {
+  const cmd = [
+    config.SIGNAL_CLI,
+    "-u",
+    number,
+    "updateProfile",
+  ];
+
+  if (name) {
+    cmd.push("--name", name);
+  }
+  if (about) {
+    cmd.push("--about", about);
+  }
+
+  let webhook;
+  console.log(cmd.join(" "));
+  if (webhooks.has(number)) {
+    webhook = webhooks.get(number);
+    if (!webhook) return "webhook does not exist";
+    webhook.rpc.stop();
+  }
+  const p = Deno.run({ cmd: cmd, stderr: "piped", stdout: "piped" });
+  const [status, stderr] = await Promise.all([
+    p.status(),
+    p.output(),
+    p.stderrOutput(),
+  ]);
+  p.close();
+
+  if (webhook) {
+    webhook.rpc.run();
+  }
+
+  console.log(status);
+  if (!status.success) {
+    let error = new TextDecoder().decode(stderr);
+    if (!error) error = "unknown error";
+    console.log(error);
+    return error;
+  }
+  return null;
+};
+
 export const getUserStatus = async (number: string) => {
   const cmd = [
     config.SIGNAL_CLI,
